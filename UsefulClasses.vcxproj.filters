@@ -23,5 +23,8 @@
     <ClInclude Include="dector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="oString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <utility>
 
+static constexpr const std::size_t marginSize = 5;
 // dector provides a double ended vector that supports O(1) additions to both the front and back
 // All memory is also stored contiguously
 template<typename T> class dector {
@@ -49,7 +50,7 @@ template<typename T> class dector {
         }
     }
 public:
-    dector() noexcept : left{ 5 }, right{ 5 }, capacity{ 11 } {
+    explicit dector() noexcept : left{ 5 }, right{ 5 }, capacity{ 11 } {
         array = new T[capacity];
     }
     ~dector() noexcept {
@@ -94,8 +95,7 @@ public:
         return array[index + left];
     }
     void condense() noexcept {
-        constexpr std::size_t marginSize = 5;
-        std::size_t currentSize = size();
+        const std::size_t currentSize = size();
         T* tmp = array;
         capacity = currentSize + 2 * marginSize;
         array = new T[capacity];
