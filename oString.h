@@ -3,6 +3,7 @@
 
 #include <utility>
 
+#include <cassert>
 // Re-implemented small string optimization
 static constexpr const uint64_t ARRAY_SIZE = (sizeof(unsigned char*) + sizeof(uint64_t) + sizeof(uint64_t) - sizeof(unsigned char)) / sizeof(unsigned char);
 static constexpr const uint64_t ALLOC_SIZE = 32;
@@ -109,6 +110,12 @@ public:
         }
         return (const char*)str._large.array;
     }
+    char* c_str_nonconst() noexcept {
+        if (isSmall()) {
+            return (char*)this;
+        }
+        return (char*)str._large.array;
+    }
     uint64_t size() const noexcept {
         if (isSmall()) {
             return ARRAY_SIZE - str._small.length;
@@ -155,19 +162,74 @@ public:
             str._large.length += 1;
         }
     }
-    // TODO: implement operator==
-    //                 operator[]
-    //                 .at()
-    //                 compare
-    //                 pop_back()
+    void pop_back() noexcept {
+        assert(size() > 0);
+        const uint64_t currentSize = size();
+        if (currentSize <= ARRAY_SIZE) {
+            str._small.array[currentSize - 1] = '\0';
+            str._small.length += 1;
+        }
+        else if (currentSize == ARRAY_SIZE + 1) { // Changing from large to small (24 -> 23)
+            unsigned char* tmpArray = str._large.array;
+
+            for (int i = 0; i < ARRAY_SIZE; i++) {
+                str._small.array[i] = tmpArray[i];
+            }
+            str._small.length = 0;
+
+            delete[] tmpArray;
+        }
+        else {
+            str._large.array[currentSize - 1] = '\0';
+            str._large.length -= 1;
+        }
+    }
+    bool operator==(const oString& rhs) const noexcept {
+        const bool lhsSize = this->size();
+        if (lhsSize != rhs.size()) {
+            return false;
+        }
+
+        // If it reaches here it must be that they are in the same mode
+        // and that lhsSize == rhs.size()
+        const char* lhsStr = this->c_str();
+        const char* rhsStr = rhs.c_str();
+        for (uint64_t i = 0; i < lhsSize; i++) {
+            if (lhsStr[i] != rhsStr[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    char at(uint64_t index) const noexcept {
+        assert(index < size());
+        return c_str()[index];
+    }
+    char& operator[](uint64_t index) noexcept {
+        assert(index < size());
+        return c_str_nonconst()[index];
+    }
+    void operator+=(const oString& rhs) noexcept {
+        const char* rhsStr = rhs.c_str();
+        for (int i = 0; i < rhs.size(); i++) {
+            push_back(rhsStr[i]);
+        }
+    }
+    void operator+=(const char* literal) noexcept {
+        uint64_t index = 0;
+        while (literal[index] != '\0') {
+            push_back(literal[index]);
+        }
+    }
+    // TODO: implement compare
     //                 operator>>
     //                 operator<<
     //                 hashing
-    //                 operator+=
     //                 append
     //                 copy (creates a copy of this string)
     //                 to_string() converts to a std::string
     //                 oString(std::string) creates a oString from std::string
+    // Implement more overloads for std::string
 };
 
 #endif // !__HEADER_oSTRING_H_
