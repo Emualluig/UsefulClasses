@@ -1,6 +1,6 @@
 #include <iostream>
 
-class CountingHeap {};
+class CountingQueue {}; // A priority queue but all the elements are unique
 class StandardHeap {};
 class MedianHeap {};
 
